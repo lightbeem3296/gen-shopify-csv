@@ -1,15 +1,19 @@
 import csv
 import os
+import tkinter as tk
 import urllib
 import urllib.parse
 from pathlib import Path
+from tkinter import messagebox
 
+import requests
 from loguru import logger
 
 CUR_DIR = Path(__file__).parent
 IMAGE_DIR = CUR_DIR / "images"
 OUTPUT_CSV = CUR_DIR / "output.csv"
 BODY_FILE_PATH = CUR_DIR / "body.txt"
+HTTP_TIMEOUT = 15.0
 IMAGE_POSITIONS = {
     "1": "Gallery",
     "2": "Cam1",
@@ -29,6 +33,35 @@ def extract_product_info(image_filename: str) -> dict[str, str]:
     }
 
 
+def msgbox_info(info_txt: str) -> None:
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showwarning("Info", info_txt)
+    root.quit()
+
+
+def msgbox_warning(url: str) -> None:
+    root = tk.Tk()
+    root.withdraw()
+    messagebox.showwarning("Image Check", f"{url}")
+    root.quit()
+
+
+def check_image_exists(image_link: str) -> bool:
+    try:
+        response = requests.head(image_link, timeout=HTTP_TIMEOUT)
+        if response.status_code == 200 and "image" in response.headers["Content-Type"]:
+            return True
+        else:
+            return False
+    except requests.Timeout:
+        logger.error(f"Request to {image_link} timed out after {HTTP_TIMEOUT} seconds.")
+        return False
+    except requests.RequestException as e:
+        logger.error(f"{e}")
+        return False
+
+
 def create_inventory_csv(image_dir: str, output_csv: str) -> None:
     with BODY_FILE_PATH.open("r") as body_file:
         body_text = body_file.read()
@@ -40,12 +73,19 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                 continue
 
             image_info = extract_product_info(image_filename=image_filename)
-
             for pos_index, pos_name in IMAGE_POSITIONS.items():
                 image_name = (
                     f'{image_info["title"]}_{image_info["type"]}_{pos_name}.png'
                 )
-                image_src = f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}"
+                logger.info(f"image_name: {image_name}")
+
+                image_src_link = f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}"
+                if check_image_exists(image_src_link):
+                    logger.info("exists")
+                else:
+                    msgbox_warning(f"Image not found: {image_src_link}")
+                    exit(1)
+
                 image_info_list.append(
                     {
                         "Handle": image_info["handle"],
@@ -76,7 +116,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                         "Variant Requires Shipping": "TRUE",
                         "Variant Taxable": "TRUE",
                         "Variant Barcode": "",
-                        "Image Src": image_src,
+                        "Image Src": image_src_link,
                         "Image Position": pos_index,
                         "Image Alt Text": "",
                         "Gift Card": "FALSE",
@@ -113,6 +153,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
         writer.writerows(image_info_list)  # Write the data
 
     logger.info(f"Data saved to {output_csv}")
+    msgbox_info(f"Data saved to {output_csv}")
 
 
 def main():

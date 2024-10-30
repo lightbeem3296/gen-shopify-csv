@@ -152,8 +152,9 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
         writer.writeheader()  # Write the header
         writer.writerows(image_info_list)  # Write the data
 
-    logger.info(f"Data saved to {output_csv}")
-    msgbox_info(f"Data saved to {output_csv}")
+    msg = f"Data saved to {output_csv}"
+    logger.info(msg)
+    msgbox_info(msg)
 
 
 def main():

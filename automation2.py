@@ -25,7 +25,7 @@ IMAGE_POSITIONS = {
 IMAGE_HOST_URL = "https://gsimagehost.com/macrocentric/"
 
 
-def extract_product_info(image_filename: str) -> dict[str, str]:
+def extract_product_info(image_filename: str):
     words = image_filename.split("_")
     return {
         "handle": words[0].lower().strip(),
@@ -67,7 +67,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
     with BODY_FILE_PATH.open("r") as body_file:
         body_text = body_file.read()
 
-        image_info_list: list[dict[str, str]] = []
+        image_info_list = []
         for image_filename in os.listdir(image_dir):
             file_ext = os.path.splitext(image_filename)[-1]
             if file_ext not in [".jpg", ".jpeg", ".png"]:

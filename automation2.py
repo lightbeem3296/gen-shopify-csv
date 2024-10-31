@@ -6,6 +6,7 @@ import urllib
 import urllib.parse
 from pathlib import Path
 from tkinter import messagebox
+from typing import Dict, List
 
 import requests
 from loguru import logger
@@ -25,7 +26,7 @@ IMAGE_POSITIONS = {
 IMAGE_HOST_URL = "https://gsimagehost.com/macrocentric/"
 
 
-def extract_product_info(image_filename: str):
+def extract_product_info(image_filename: str) -> Dict[str, str]:
     words = image_filename.split("_")
     return {
         "handle": words[0].lower().strip(),
@@ -67,7 +68,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
     with BODY_FILE_PATH.open("r") as body_file:
         body_text = body_file.read()
 
-        image_info_list = []
+        image_info_list: List[Dict[str, str]] = []
         for image_filename in os.listdir(image_dir):
             file_ext = os.path.splitext(image_filename)[-1]
             if file_ext not in [".jpg", ".jpeg", ".png"]:

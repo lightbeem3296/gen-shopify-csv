@@ -1,5 +1,6 @@
 import csv
 import os
+import time
 import tkinter as tk
 import urllib
 import urllib.parse
@@ -79,12 +80,14 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                 )
                 logger.info(f"image_name: {image_name}")
 
-                image_src_link = f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}"
+                image_src_link = (
+                    f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}?v={time.time()}"
+                )
                 if check_image_exists(image_src_link):
                     logger.info("exists")
                 else:
+                    logger.warning(f"not found: {image_src_link}")
                     msgbox_warning(f"Image not found: {image_src_link}")
-                    exit(1)
 
                 image_info_list.append(
                     {
@@ -163,3 +166,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    input("Press ENTER to exit.")

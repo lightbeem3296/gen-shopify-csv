@@ -23,7 +23,7 @@ IMAGE_POSITIONS = {
     "4": "CamClose",
 }
 
-CHECK_IMAGE_LINK = False
+CHECK_IMAGE_LINK = True
 IMAGE_HOST_URL = "https://gsimagehost.com/macrocentric/"
 
 

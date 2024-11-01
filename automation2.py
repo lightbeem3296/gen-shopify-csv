@@ -17,7 +17,7 @@ OUTPUT_CSV = CUR_DIR / "output.csv"
 BODY_FILE_PATH = CUR_DIR / "body.txt"
 HTTP_TIMEOUT = 15.0
 IMAGE_POSITIONS = {
-    "1": "Gallery",
+    "1": "CamGallery",
     "2": "Cam1",
     "3": "Cam2",
     "4": "CamClose",

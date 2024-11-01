@@ -23,6 +23,7 @@ IMAGE_POSITIONS = {
     "4": "CamClose",
 }
 
+CHECK_IMAGE_LINK = False
 IMAGE_HOST_URL = "https://gsimagehost.com/macrocentric/"
 
 
@@ -84,72 +85,83 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                 image_src_link = (
                     f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}?v={time.time()}"
                 )
-                if check_image_exists(image_src_link):
-                    logger.info("exists")
-                else:
-                    logger.warning(f"not found: {image_src_link}")
-                    msgbox_warning(f"Image not found: {image_src_link}")
 
-                image_info_list.append(
-                    {
-                        "Handle": image_info["handle"],
-                        "Title": image_info["title"],
-                        "Body (HTML)": body_text,
-                        "Vendor": "My Store",
-                        "Product Category": "Software > Digital Goods & Currency > Digital Artwork",
-                        "Type": image_info["type"],
-                        "Tags": "",
-                        "Published": "TRUE",
-                        "Option1 Name": "Title",
-                        "Option1 Value": "Default Title",
-                        "Option1 Linked To": "",
-                        "Option2 Name": "",
-                        "Option2 Value": "",
-                        "Option2 Linked To": "",
-                        "Option3 Name": "",
-                        "Option3 Value": "",
-                        "Option3 Linked To": "",
-                        "Variant SKU": "",
-                        "Variant Grams": "0",
-                        "Variant Inventory Tracker": "shopify",
-                        "Variant Inventory Qty": "0",
-                        "Variant Inventory Policy": "continue",
-                        "Variant Fulfillment Service": "manual",
-                        "Variant Price": "485",
-                        "Variant Compare At Price": "",
-                        "Variant Requires Shipping": "TRUE",
-                        "Variant Taxable": "TRUE",
-                        "Variant Barcode": "",
-                        "Image Src": image_src_link,
-                        "Image Position": pos_index,
-                        "Image Alt Text": "",
-                        "Gift Card": "FALSE",
-                        "SEO Title": "",
-                        "SEO Description": "",
-                        "Google Shopping / Google Product Category": "",
-                        "Google Shopping / Gender": "",
-                        "Google Shopping / Age Group": "",
-                        "Google Shopping / MPN": "",
-                        "Google Shopping / Condition": "",
-                        "Google Shopping / Custom Product": "",
-                        "Google Shopping / Custom Label 0": "",
-                        "Google Shopping / Custom Label 1": "",
-                        "Google Shopping / Custom Label 2": "",
-                        "Google Shopping / Custom Label 3": "",
-                        "Google Shopping / Custom Label 4": "",
-                        "Variant Image": "",
-                        "Variant Weight Unit": "lb",
-                        "Variant Tax Code": "",
-                        "Cost per item": "",
-                        "Included / United States": "TRUE",
-                        "Price / United States": "",
-                        "Compare At Price / United States": "",
-                        "Included / International": "TRUE",
-                        "Price / International": "",
-                        "Compare At Price / International": "",
-                        "Status": "active",
-                    }
-                )
+                if CHECK_IMAGE_LINK:
+                    if check_image_exists(image_src_link):
+                        logger.info("exists")
+                    else:
+                        logger.warning(f"not found: {image_src_link}")
+                        msgbox_warning(f"Image not found: {image_src_link}")
+
+                if pos_index == "1":
+                    image_info_list.append(
+                        {
+                            "Handle": image_info["handle"],
+                            "Title": image_info["title"],
+                            "Body (HTML)": body_text,
+                            "Vendor": "My Store",
+                            "Product Category": "Software > Digital Goods & Currency > Digital Artwork",
+                            "Type": image_info["type"],
+                            "Tags": "",
+                            "Published": "TRUE",
+                            "Option1 Name": "Title",
+                            "Option1 Value": "Default Title",
+                            "Option1 Linked To": "",
+                            "Option2 Name": "",
+                            "Option2 Value": "",
+                            "Option2 Linked To": "",
+                            "Option3 Name": "",
+                            "Option3 Value": "",
+                            "Option3 Linked To": "",
+                            "Variant SKU": "",
+                            "Variant Grams": "0",
+                            "Variant Inventory Tracker": "shopify",
+                            "Variant Inventory Qty": "0",
+                            "Variant Inventory Policy": "continue",
+                            "Variant Fulfillment Service": "manual",
+                            "Variant Price": "485",
+                            "Variant Compare At Price": "",
+                            "Variant Requires Shipping": "TRUE",
+                            "Variant Taxable": "TRUE",
+                            "Variant Barcode": "",
+                            "Image Src": image_src_link,
+                            "Image Position": pos_index,
+                            "Image Alt Text": "",
+                            "Gift Card": "FALSE",
+                            "SEO Title": "",
+                            "SEO Description": "",
+                            "Google Shopping / Google Product Category": "",
+                            "Google Shopping / Gender": "",
+                            "Google Shopping / Age Group": "",
+                            "Google Shopping / MPN": "",
+                            "Google Shopping / Condition": "",
+                            "Google Shopping / Custom Product": "",
+                            "Google Shopping / Custom Label 0": "",
+                            "Google Shopping / Custom Label 1": "",
+                            "Google Shopping / Custom Label 2": "",
+                            "Google Shopping / Custom Label 3": "",
+                            "Google Shopping / Custom Label 4": "",
+                            "Variant Image": "",
+                            "Variant Weight Unit": "lb",
+                            "Variant Tax Code": "",
+                            "Cost per item": "",
+                            "Included / United States": "TRUE",
+                            "Price / United States": "",
+                            "Compare At Price / United States": "",
+                            "Included / International": "TRUE",
+                            "Price / International": "",
+                            "Compare At Price / International": "",
+                            "Status": "active",
+                        }
+                    )
+                else:
+                    image_info_list.append(
+                        {
+                            "Handle": image_info["handle"],
+                            "Image Src": image_src_link,
+                            "Image Position": pos_index,
+                        }
+                    )
 
     with open(output_csv, "w", newline="", encoding="utf-8-sig") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=image_info_list[0].keys())

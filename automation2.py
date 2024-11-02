@@ -98,7 +98,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                         "Type": image_info["type"],
                         "Tags": "",
                         "Published": "TRUE",
-                        "Collection": get_random_time_in_date_range(2023, 1, 2024, 11),
+                        "Collection": get_random_time_in_date_range(2023, 8, 2024, 11),
                         "Option1 Name": "Title",
                         "Option1 Value": "Default Title",
                         "Option1 Linked To": "",
@@ -171,5 +171,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     input("Press ENTER to exit.")

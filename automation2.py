@@ -168,6 +168,8 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
 
 
 def main():
+    logger.info(f"image_folder: {IMAGE_DIR}")
+    logger.info(f"image_host_url: {IMAGE_HOST_URL}")
     create_inventory_csv(IMAGE_DIR, OUTPUT_CSV)
 
 

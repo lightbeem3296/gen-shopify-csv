@@ -70,6 +70,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
     for image_filename in os.listdir(image_dir):
         file_ext = os.path.splitext(image_filename)[-1]
         if file_ext not in [".jpg", ".jpeg", ".png"]:
+            logger.warning(f"not an image file: {image_filename}")
             continue
 
         image_info = extract_product_info(image_filename=image_filename)
@@ -171,4 +172,5 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     input("Press ENTER to exit.")

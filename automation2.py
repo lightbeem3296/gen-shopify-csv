@@ -26,16 +26,7 @@ CHECK_IMAGE_LINK = True
 IMAGE_HOST_URL = "https://gsimagehost.com/macrocentric/"
 
 
-def extract_product_info(image_filename: str) -> Dict[str, str]:
-    words = image_filename.split("_")
-    return {
-        "handle": words[0].lower().strip(),
-        "title": words[0].strip(),
-        "type": words[1].strip(),
-    }
-
-
-def get_random_time_in_date_range(start_year, start_month, end_year, end_month) -> str:
+def get_random_date(start_year, start_month, end_year, end_month) -> str:
     """Returns random date in range. For example `October 2023`."""
     start_date = datetime(start_year, start_month, 1)
     if end_month == 12:
@@ -47,7 +38,7 @@ def get_random_time_in_date_range(start_year, start_month, end_year, end_month) 
     random_seconds = random.randint(0, int(delta.total_seconds()))
 
     random_time = start_date + timedelta(seconds=random_seconds)
-    return random_time.strftime("%B %Y")
+    return random_time
 
 
 def check_image_exists(image_link: str) -> bool:
@@ -65,17 +56,56 @@ def check_image_exists(image_link: str) -> bool:
         return False
 
 
-def create_inventory_csv(image_dir: str, output_csv: str) -> None:
-    image_info_list: List[Dict[str, str]] = []
-    for image_filename in os.listdir(image_dir):
-        file_ext = os.path.splitext(image_filename)[-1]
+def extract_product_info(image_filename: str) -> Dict[str, str]:
+    words = image_filename.split("_")
+    return {
+        "handle": words[0].lower().strip(),
+        "title": words[0].strip(),
+        "type": words[1].strip(),
+    }
+
+
+def list_images(image_dir: str) -> List[Dict[str, str]]:
+    image_list = []
+    for filename in os.listdir(image_dir):
+        file_ext = os.path.splitext(filename)[-1]
         if file_ext not in [".jpg", ".jpeg", ".png"]:
-            logger.warning(f"not an image file: {image_filename}")
+            logger.warning(f"not an image file: {filename}")
             continue
 
-        image_info = extract_product_info(image_filename=image_filename)
+        info1 = extract_product_info(image_filename=filename)
+        handle = info1["handle"]
+        type = info1["type"]
+
+        exists = False
+        for item in image_list:
+            if item["handle"] == handle and item["type"] == type:
+                exists = True
+                break
+
+        if not exists:
+            image_list.append(
+                {
+                    "filename": filename,
+                    "handle": handle,
+                    "title": info1["title"],
+                    "type": type,
+                    "date": get_random_date(2023, 8, 2024, 11),
+                }
+            )
+    image_list.sort(key=lambda x: x["filename"])
+    image_list.sort(key=lambda x: x["date"])
+
+    return image_list
+
+
+def create_inventory_csv(image_dir: str, output_csv: str) -> None:
+    img_list = list_images(image_dir=image_dir)
+
+    csv_rows: List[Dict[str, str]] = []
+    for img_info in img_list:
         for pos_index, pos_name in IMAGE_POSITIONS.items():
-            image_name = f'{image_info["title"]}_{image_info["type"]}_{pos_name}.png'
+            image_name = f'{img_info["title"]}_{img_info["type"]}_{pos_name}.png'
             logger.info(f"image_name: {image_name}")
 
             image_src_link = (
@@ -89,17 +119,17 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                     logger.warning(f"image not found: {image_src_link}")
 
             if pos_index == "1":
-                image_info_list.append(
+                csv_rows.append(
                     {
-                        "Handle": image_info["handle"],
-                        "Title": image_info["title"],
+                        "Handle": img_info["handle"],
+                        "Title": img_info["title"],
                         "Body (HTML)": "",
                         "Vendor": "My Store",
                         "Product Category": "Software > Digital Goods & Currency > Digital Artwork",
-                        "Type": image_info["type"],
+                        "Type": img_info["type"],
                         "Tags": "",
                         "Published": "TRUE",
-                        "Collection": get_random_time_in_date_range(2023, 8, 2024, 11),
+                        "Collection": img_info["date"].strftime("%B %Y"),
                         "Option1 Name": "Title",
                         "Option1 Value": "Default Title",
                         "Option1 Linked To": "",
@@ -151,20 +181,19 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                     }
                 )
             else:
-                image_info_list.append(
+                csv_rows.append(
                     {
-                        "Handle": image_info["handle"],
+                        "Handle": img_info["handle"],
                         "Image Src": image_src_link,
                         "Image Position": pos_index,
                     }
                 )
 
     with open(output_csv, "w", newline="", encoding="utf-8-sig") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=image_info_list[0].keys())
+        writer = csv.DictWriter(csvfile, fieldnames=csv_rows[0].keys())
         writer.writeheader()  # Write the header
-        writer.writerows(image_info_list)  # Write the data
-
-    logger.info(f"Data saved to {output_csv}")
+        writer.writerows(csv_rows)  # Write the data
+        logger.info(f"Data saved to {output_csv}")
 
 
 def main():

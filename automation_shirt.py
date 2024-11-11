@@ -107,10 +107,6 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
     csv_rows: List[Dict[str, str]] = []
     prev_handle = ""
     for img_info in img_list:
-        handle = img_info["handle"]
-        is_new_handle = handle != prev_handle
-        prev_handle = handle
-
         type_tag = img_info["type"]
         type_title = PRODUCT_TYPES[type_tag]
         color_tag = img_info["color"]
@@ -130,6 +126,10 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                     logger.warning(f"image not found: {image_src_link}")
 
             for size in PRODUCT_SIZES:
+                handle = img_info["handle"]
+                is_new_handle = handle != prev_handle
+                prev_handle = handle
+
                 if is_new_handle:
                     csv_rows.append(
                         {
@@ -231,4 +231,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    input("Press ENTER to exit.")

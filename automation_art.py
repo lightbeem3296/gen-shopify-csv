@@ -12,14 +12,14 @@ import requests
 from loguru import logger
 
 CUR_DIR = Path(__file__).parent
-IMAGE_DIR = CUR_DIR / "images"
-OUTPUT_CSV = CUR_DIR / "output.csv"
+IMAGE_DIR = CUR_DIR / "images_art"
+OUTPUT_CSV = CUR_DIR / "output_art.csv"
 HTTP_TIMEOUT = 15.0
 IMAGE_POSITIONS = {
     "1": "CamGallery",
-    "2": "Cam1",
-    "3": "Cam2",
-    "4": "CamClose",
+    "2": "CamClose",
+    "3": "Cam1",
+    "4": "Cam2",
 }
 
 CHECK_IMAGE_LINK = True

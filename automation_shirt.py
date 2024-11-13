@@ -3,6 +3,7 @@ import os
 import time
 import urllib
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Dict, List
 
@@ -13,7 +14,7 @@ CUR_DIR = Path(__file__).parent
 IMAGE_DIR = CUR_DIR / "images_shirt"
 OUTPUT_CSV = CUR_DIR / "output_shirt.csv"
 HTTP_TIMEOUT = 15.0
-
+MAX_WORKERS = 32
 
 PRODUCT_TYPES = {
     "tshirt": "T-shirt",
@@ -94,7 +95,7 @@ def list_images(image_dir: str) -> List[Dict[str, str]]:
     return image_list
 
 
-def gen_img_link(title: str, color_tag: str, type_tag: str, size: str) -> str:
+def gen_img_src_link(title: str, color_tag: str, type_tag: str, size: str) -> str:
     mapping = {
         ("black", "tshirt", "xs"): ("tshirt", "Black", "CamClose"),
         ("black", "tshirt", "s"): ("tshirt", "Black", "CamFull"),
@@ -113,15 +114,28 @@ def gen_img_link(title: str, color_tag: str, type_tag: str, size: str) -> str:
     img_link = ""
     if pos_name:
         image_name = f"{title}_{final_type_tag}_{final_color_title}_{pos_name}.png"
-        img_link = f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}?v={time.time()}"
+        img_link = (
+            f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}?v={int(time.time())}"
+        )
 
     return img_link
+
+
+def get_variant_image_link(
+    title: str,
+    color_title: str,
+    type_tag: str,
+    pos_name: str,
+) -> str:
+    image_name = f"{title}_{type_tag}_{color_title}_{pos_name}.png"
+    return f"{IMAGE_HOST_URL}{urllib.parse.quote(image_name)}?v={int(time.time())}"
 
 
 def create_inventory_csv(image_dir: str, output_csv: str) -> None:
     img_list = list_images(image_dir=image_dir)
 
     csv_rows: List[Dict[str, str]] = []
+    img_link_list = []
     prev_handle = ""
     for img_info in img_list:
         handle = img_info["handle"]
@@ -130,12 +144,20 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
             for type_tag, type_title in PRODUCT_TYPES.items():
                 for size in PRODUCT_SIZES:
                     logger.info(f"{title} | {color_tag} | {type_title} | {size}")
-                    image_src_link = gen_img_link(title, color_tag, type_tag, size)
-                    if image_src_link != "":
-                        if check_image_exists(image_src_link):
-                            logger.info(f"exists: {image_src_link}")
-                        else:
-                            logger.warning(f"image not found: {image_src_link}")
+                    image_src_link = gen_img_src_link(
+                        title,
+                        color_tag,
+                        type_tag,
+                        size,
+                    )
+                    variant_image_link = get_variant_image_link(
+                        title,
+                        color_title,
+                        type_tag,
+                        "CamFull",
+                    )
+                    img_link_list.append(image_src_link)
+                    img_link_list.append(variant_image_link)
 
                     is_new_handle = handle != prev_handle
                     prev_handle = handle
@@ -191,7 +213,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                                 "Clothing features (product.metafields.shopify.clothing-features)": "",
                                 "Color (product.metafields.shopify.color-pattern)": "black; silver",
                                 "Size (product.metafields.shopify.size)": "xs; s; m; l; xl; 2xl",
-                                "Variant Image": image_src_link,
+                                "Variant Image": variant_image_link,
                                 "Variant Weight Unit": "lb",
                                 "Variant Tax Code": "",
                                 "Cost per item": "",
@@ -220,7 +242,7 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
                                 "Variant Requires Shipping": "TRUE",
                                 "Variant Taxable": "TRUE",
                                 "Image Src": image_src_link,
-                                "Variant Image": image_src_link,
+                                "Variant Image": variant_image_link,
                                 "Variant Weight Unit": "lb",
                             }
                         )
@@ -230,6 +252,18 @@ def create_inventory_csv(image_dir: str, output_csv: str) -> None:
         writer.writeheader()  # Write the header
         writer.writerows(csv_rows)  # Write the data
         logger.info(f"Data saved to {output_csv}")
+
+    logger.info("checking image links ...")
+
+    def process_link(link):
+        if link != "":
+            if check_image_exists(link):
+                logger.info(f"exists: {link}")
+            else:
+                logger.warning(f"image not found: {link}")
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        executor.map(process_link, set(img_link_list))
 
 
 def main():
